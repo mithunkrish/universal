@@ -1,0 +1,62 @@
+# Simple workflow for deploying a build-based app (like React/Vue/Next) to GitHub Pages
+name: Deploy Build App to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+# (पुरानो permissions र concurrency लाई यथावत राख्नुहोस्)
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build र deploy गर्ने job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      # 1. Node.js सेट अप गर्ने
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # तपाईंको प्रोजेक्टलाई चाहिने Node.js version राख्नुहोस्
+      
+      # 2. आवश्यक प्याकेजहरू इन्स्टल गर्ने
+      - name: Install dependencies
+        run: npm install
+        
+      # 3. 'npm run build' कमाण्ड चलाउने
+      - name: Build project
+        run: npm run build
+        
+      # 4. Pages सेट अप गर्ने
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          # यहाँ तपाईंको build folder को नाम राख्नुहोस्।
+          # React/Next.js ले प्राय: 'build' वा 'out' बनाउँछ। Vue/Vite ले प्राय: 'dist' बनाउँछ।
+          static_site_root: 'dist' 
+
+      # 5. Build Artifact अपलोड गर्ने
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # यहाँ पनि build folder को नाम राख्नुहोस्
+          path: 'dist' 
+          
+      # 6. GitHub Pages मा Deploy गर्ने
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
